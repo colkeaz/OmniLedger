@@ -6,12 +6,12 @@ OmniLedger is a modern, offline financial ledger management system designed to p
 ---
 
 ## UML Diagram
-*You can paste your own exported UML image below, or use the interactive Mermaid diagram provided.*
 
-```
+
+
 <img width="8192" height="3811" alt="NewUMLDiagram" src="https://github.com/user-attachments/assets/89d5c56c-0eb4-485b-9f98-f83690567137" />
 
-```
+
 
 ---
 
