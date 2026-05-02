@@ -4,7 +4,7 @@ using System.Windows.Forms;
 using OmniLedger.Logic;
 using System.Runtime.InteropServices;
 
-namespace OmniLedger
+namespace OmniLedger.UI
 {
     public partial class Form1 : Form
     {
@@ -64,7 +64,9 @@ namespace OmniLedger
             {
                 if (_userManager.ValidateUser(username, password))
                 {
-                    LedgerManager ledger = new LedgerManager(username);
+                    var user = _userManager.GetUser(username);
+                    string initialCurrency = user?.PreferredCurrency ?? "$";
+                    LedgerManager ledger = new LedgerManager(username, initialCurrency);
                     Form2 dashboardForm = new Form2(ledger, username, _userManager);
                     dashboardForm.Show();
                     this.Hide();

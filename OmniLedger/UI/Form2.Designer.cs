@@ -1,4 +1,4 @@
-namespace OmniLedger
+namespace OmniLedger.UI
 {
     partial class Form2
     {

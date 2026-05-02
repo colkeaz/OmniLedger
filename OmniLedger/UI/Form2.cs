@@ -4,14 +4,14 @@ using System.Windows.Forms;
 using OmniLedger.Logic;
 using System.Runtime.InteropServices;
 
-namespace OmniLedger
+namespace OmniLedger.UI
 {
     public partial class Form2 : Form
     {
         private LedgerManager _ledgerManager;
         private string _username;
         private UserManager _userManager;
-        private string _currencySymbol;
+
 
         public const int WM_NCLBUTTONDOWN = 0xA1;
         public const int HT_CAPTION = 0x2;
@@ -28,8 +28,7 @@ namespace OmniLedger
             _username = username;
             _userManager = userManager;
             
-            var user = _userManager.GetUser(_username);
-            _currencySymbol = user != null ? user.PreferredCurrency : "$";
+            // Currency is now managed by LedgerManager
         }
 
         private void Form2_Load(object sender, EventArgs e)
@@ -83,7 +82,7 @@ namespace OmniLedger
             BarChart.Invalidate();
         }
 
-        private string FormatCurrency(decimal amount) => $"{_currencySymbol}{amount:0.00}";
+        private string FormatCurrency(decimal amount) => $"{_ledgerManager.CurrentCurrencySymbol}{amount:0.00}";
 
         private void UpdateBalance()
         {
@@ -122,7 +121,7 @@ namespace OmniLedger
                 string source = PromptForString("Enter Income Source:");
                 if (!string.IsNullOrEmpty(source))
                 {
-                    decimal convertedAmount = CurrencyConverter.Convert(rawAmount, transCurrency, _currencySymbol);
+                    decimal convertedAmount = CurrencyConverter.Convert(rawAmount, transCurrency, _ledgerManager.CurrentCurrencySymbol);
                     var incomeRecord = new IncomeRecord(convertedAmount, source, "");
                     _ledgerManager.ProcessTransaction(incomeRecord);
                     RefreshDashboard();
@@ -138,7 +137,7 @@ namespace OmniLedger
                 string category = PromptForString("Enter Expense Category:");
                 if (!string.IsNullOrEmpty(category))
                 {
-                    decimal convertedAmount = CurrencyConverter.Convert(rawAmount, transCurrency, _currencySymbol);
+                    decimal convertedAmount = CurrencyConverter.Convert(rawAmount, transCurrency, _ledgerManager.CurrentCurrencySymbol);
                     var expense = new BusinessExpense(convertedAmount, category, "");
                     if (_ledgerManager.ProcessTransaction(expense))
                     {
@@ -154,7 +153,7 @@ namespace OmniLedger
 
         private decimal PromptForAmountAndCurrency(string prompt, out string selectedCurrency)
         {
-            selectedCurrency = "$";
+            selectedCurrency = _ledgerManager.CurrentCurrencySymbol;
             Form promptForm = new Form()
             {
                 Text = "Input",
@@ -187,7 +186,7 @@ namespace OmniLedger
             comboBox.Items.Add("₱ - PHP");
             comboBox.Items.Add("₹ - INR");
             
-            int index = comboBox.FindString(_currencySymbol);
+            int index = comboBox.FindString(_ledgerManager.CurrentCurrencySymbol);
             comboBox.SelectedIndex = index >= 0 ? index : 0;
 
             Button okButton = new Button() { Text = "OK", Left = 130, Width = 80, Top = 140, DialogResult = DialogResult.OK, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(0, 122, 204) };
@@ -294,8 +293,12 @@ namespace OmniLedger
             string newCurrency = PromptForCurrency();
             if (!string.IsNullOrEmpty(newCurrency))
             {
-                _currencySymbol = newCurrency.Trim();
-                _userManager.UpdateUserCurrency(_username, _currencySymbol);
+                // Encapsulated conversion logic in LedgerManager
+                _ledgerManager.ChangeCurrency(newCurrency.Trim());
+                
+                // Update persistent user preference
+                _userManager.UpdateUserCurrency(_username, newCurrency.Trim());
+                
                 RefreshDashboard();
             }
         }

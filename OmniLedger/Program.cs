@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using OmniLedger.Logic;
+using OmniLedger.UI;
 
 namespace OmniLedger
 {

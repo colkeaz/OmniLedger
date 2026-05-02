@@ -17,13 +17,16 @@ namespace OmniLedger.Logic
         
         private string _username;
         private DataStore _dataStore;
+        private string _currentCurrencySymbol = "$";
 
         public decimal CurrentBalance => _currentBalance;
+        public string CurrentCurrencySymbol => _currentCurrencySymbol;
         public IReadOnlyList<Transaction> TransactionHistory => _transactionHistory.AsReadOnly();
 
-        public LedgerManager(string username)
+        public LedgerManager(string username, string initialCurrency = "$")
         {
             _username = username;
+            _currentCurrencySymbol = initialCurrency;
             _dataStore = new DataStore();
             _transactionHistory = _dataStore.LoadTransactions(_username);
             
@@ -32,6 +35,28 @@ namespace OmniLedger.Logic
                 _transactionCounter = _transactionHistory.Max(t => t.TransactionID);
                 _currentBalance = _transactionHistory.Sum(t => t is IncomeRecord ? t.Amount : -t.Amount);
             }
+        }
+
+        /// <summary>
+        /// Change the ledger currency and convert all existing transactions
+        /// Encapsulation ensures that balance updates are synchronized with currency changes
+        /// </summary>
+        public void ChangeCurrency(string newCurrency)
+        {
+            if (string.IsNullOrEmpty(newCurrency) || newCurrency == _currentCurrencySymbol)
+                return;
+
+            string oldCurrency = _currentCurrencySymbol;
+            _currentCurrencySymbol = newCurrency;
+
+            foreach (var transaction in _transactionHistory)
+            {
+                transaction.Amount = CurrencyConverter.Convert(transaction.Amount, oldCurrency, newCurrency);
+            }
+
+            // Recalculate balance to ensure precision
+            _currentBalance = _transactionHistory.Sum(t => t is IncomeRecord ? t.Amount : -t.Amount);
+            _dataStore.SaveTransactions(_username, _transactionHistory);
         }
 
         /// <summary>
