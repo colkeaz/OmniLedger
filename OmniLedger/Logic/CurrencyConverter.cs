@@ -30,7 +30,8 @@ namespace OmniLedger.Logic
 
             // Convert to base (USD), then to target
             decimal amountInUSD = amount / fromRate;
-            return amountInUSD * toRate;
+            decimal converted = amountInUSD * toRate;
+            return Math.Round(converted, 2, MidpointRounding.AwayFromZero);
         }
     }
 }

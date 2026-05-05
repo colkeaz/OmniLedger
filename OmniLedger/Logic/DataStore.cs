@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Globalization;
 
 namespace OmniLedger.Logic
 {
@@ -20,15 +21,14 @@ namespace OmniLedger.Logic
             foreach (var line in lines)
             {
                 // Simple CSV parsing, assume no commas in descriptions for now since EscapeCSV implementation below avoids splitting correctly if we just use string.Split
-                // Wait, if I escape with quotes, string.Split(',') will break. Let's write a simple parser or just remove commas from description for safety in this scope.
                 
                 string[] parts = SplitCsvLine(line);
                 if (parts.Length < 6) continue;
 
                 int id = int.Parse(parts[0]);
                 string type = parts[1];
-                DateTime date = DateTime.Parse(parts[2]);
-                decimal amount = decimal.Parse(parts[3]);
+                DateTime date = DateTime.Parse(parts[2], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+                decimal amount = decimal.Parse(parts[3], CultureInfo.InvariantCulture);
                 string desc = parts[4];
                 string extra = parts[5];
 
@@ -56,7 +56,7 @@ namespace OmniLedger.Logic
             {
                 string extra = t is IncomeRecord inc ? inc.Source : (t is BusinessExpense exp ? exp.Category : "");
                 string type = t is IncomeRecord ? "Income" : "Expense";
-                lines.Add($"{t.TransactionID},{type},{t.Date:O},{t.Amount},{EscapeCSV(t.Description)},{EscapeCSV(extra)}");
+                lines.Add($"{t.TransactionID},{type},{t.Date.ToString("O", CultureInfo.InvariantCulture)},{t.Amount.ToString(CultureInfo.InvariantCulture)},{EscapeCSV(t.Description)},{EscapeCSV(extra)}");
             }
 
             File.WriteAllLines(path, lines);

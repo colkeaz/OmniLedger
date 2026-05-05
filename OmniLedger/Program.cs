@@ -1,7 +1,5 @@
 using System;
-using System.Windows.Forms;
 using OmniLedger.Logic;
-using OmniLedger.UI;
 
 namespace OmniLedger
 {
@@ -10,9 +8,14 @@ namespace OmniLedger
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            string url = "http://localhost:8080/";
+            var server = new HttpServer(url);
+            server.Start(url);
+
+            Console.WriteLine("API Server is running. Press Enter to exit...");
+            System.Threading.Thread.Sleep(System.Threading.Timeout.Infinite);
+
+            server.Stop();
         }
     }
 }
