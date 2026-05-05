@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace OmniLedger.Logic
 {
@@ -21,7 +22,7 @@ namespace OmniLedger.Logic
         {
             if (!File.Exists(_userFilePath)) return;
 
-            var lines = File.ReadAllLines(_userFilePath);
+            var lines = File.ReadAllLines(_userFilePath, Encoding.UTF8);
             foreach (var line in lines)
             {
                 var parts = line.Split(',');
@@ -36,7 +37,7 @@ namespace OmniLedger.Logic
         private void SaveUsers()
         {
             var lines = _users.Select(u => $"{u.Username},{u.PasswordHash},{u.PreferredCurrency}");
-            File.WriteAllLines(_userFilePath, lines);
+            File.WriteAllLines(_userFilePath, lines, Encoding.UTF8);
         }
 
         public bool RegisterUser(string username, string password)
