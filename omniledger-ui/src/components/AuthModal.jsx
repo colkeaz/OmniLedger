@@ -18,7 +18,7 @@ const AuthModal = ({ onComplete }) => {
     try {
       const res = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json; charset=utf-8' },
         body: JSON.stringify({ username: e.target[0].value, password: e.target[1].value })
       });
       const data = await res.json();
@@ -37,7 +37,7 @@ const AuthModal = ({ onComplete }) => {
     try {
       const res = await fetch('http://localhost:8080/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json; charset=utf-8' },
         body: JSON.stringify({ username: e.target[0].value, password: e.target[2].value })
       });
       const data = await res.json();

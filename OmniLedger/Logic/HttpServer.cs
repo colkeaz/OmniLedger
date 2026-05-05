@@ -285,7 +285,8 @@ namespace OmniLedger.Logic
 
         private T ReadJsonBody<T>(HttpListenerRequest request)
         {
-            using (var reader = new StreamReader(request.InputStream, request.ContentEncoding))
+            var encoding = request.ContentEncoding ?? Encoding.UTF8;
+            using (var reader = new StreamReader(request.InputStream, encoding))
             {
                 string json = reader.ReadToEnd();
                 return _serializer.Deserialize<T>(json);
