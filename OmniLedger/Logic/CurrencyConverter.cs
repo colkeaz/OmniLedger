@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 
 namespace OmniLedger.Logic
 {
     public static class CurrencyConverter
     {
+        private static readonly HashSet<string> ValidSymbols = new HashSet<string> { "$", "€", "£", "¥", "₱", "₹" };
+
         // Base currency is USD (1.0)
         private static decimal GetRate(string currencySymbol)
         {
@@ -19,8 +22,27 @@ namespace OmniLedger.Logic
             }
         }
 
+        /// <summary>
+        /// Returns true if the symbol is a recognized currency
+        /// </summary>
+        public static bool IsValidCurrency(string symbol)
+        {
+            return !string.IsNullOrEmpty(symbol) && ValidSymbols.Contains(symbol.Trim());
+        }
+
+        /// <summary>
+        /// Returns the symbol if valid, or "$" as a safe fallback
+        /// </summary>
+        public static string SanitizeCurrency(string symbol)
+        {
+            return IsValidCurrency(symbol) ? symbol.Trim() : "$";
+        }
+
         public static decimal Convert(decimal amount, string fromCurrency, string toCurrency)
         {
+            fromCurrency = SanitizeCurrency(fromCurrency);
+            toCurrency = SanitizeCurrency(toCurrency);
+
             if (fromCurrency == toCurrency) return amount;
 
             decimal fromRate = GetRate(fromCurrency);

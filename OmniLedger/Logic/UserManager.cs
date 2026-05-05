@@ -28,7 +28,7 @@ namespace OmniLedger.Logic
                 var parts = line.Split(',');
                 if (parts.Length >= 2)
                 {
-                    string currency = parts.Length > 2 ? parts[2] : "$";
+                    string currency = parts.Length > 2 ? CurrencyConverter.SanitizeCurrency(parts[2]) : "$";
                     _users.Add(new User(parts[0], parts[1], currency));
                 }
             }
