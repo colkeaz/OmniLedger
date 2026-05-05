@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Globalization;
+using System.Text;
 
 namespace OmniLedger.Logic
 {
@@ -17,7 +18,7 @@ namespace OmniLedger.Logic
 
             if (!File.Exists(path)) return transactions;
 
-            var lines = File.ReadAllLines(path).Skip(1); // Skip header
+            var lines = File.ReadAllLines(path, Encoding.UTF8).Skip(1); // Skip header
             foreach (var line in lines)
             {
                 // Simple CSV parsing, assume no commas in descriptions for now since EscapeCSV implementation below avoids splitting correctly if we just use string.Split
@@ -59,7 +60,7 @@ namespace OmniLedger.Logic
                 lines.Add($"{t.TransactionID},{type},{t.Date.ToString("O", CultureInfo.InvariantCulture)},{t.Amount.ToString(CultureInfo.InvariantCulture)},{EscapeCSV(t.Description)},{EscapeCSV(extra)}");
             }
 
-            File.WriteAllLines(path, lines);
+            File.WriteAllLines(path, lines, Encoding.UTF8);
         }
 
         private string EscapeCSV(string field)
