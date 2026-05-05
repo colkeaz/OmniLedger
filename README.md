@@ -6,92 +6,12 @@ OmniLedger is a modern, offline financial ledger management system designed to p
 ---
 
 ## UML Diagram
-*You can paste your own exported UML image below, or use the interactive Mermaid diagram provided.*
 
-```mermaid
-classDiagram
-    class Transaction {
-        <<abstract>>
-        +Guid TransactionID
-        +DateTime Date
-        +decimal Amount
-        +string Description
-        +GetTransactionType() string
-    }
-    class IncomeRecord {
-        +string Source
-    }
-    class BusinessExpense {
-        +string Category
-    }
-    Transaction <|-- IncomeRecord
-    Transaction <|-- BusinessExpense
 
-    class LedgerManager {
-        +CurrentBalance : decimal
-        +CurrentCurrencySymbol : string
-        +ProcessTransaction(transaction: Transaction) bool
-        +ChangeCurrency(newCurrency: string)
-        +GetAllTransactions() List~Transaction~
-        +GetTotalIncome() decimal
-        +GetTotalExpenses() decimal
-    }
-    LedgerManager --> Transaction : Manages
-    LedgerManager --> DataStore : Persists via
 
-    class DataStore {
-        +SaveTransactions(username: string, transactions: List~Transaction~)
-        +LoadTransactions(username: string) List~Transaction~
-    }
+<img width="8192" height="3811" alt="NewUMLDiagram" src="https://github.com/user-attachments/assets/89d5c56c-0eb4-485b-9f98-f83690567137" />
 
-    class UserManager {
-        +RegisterUser(username, password) bool
-        +ValidateUser(username, password) bool
-        +UpdateUserCurrency(username, newCurrency)
-    }
-    UserManager --> User : Manages
 
-    class User {
-        +string Username
-        +string PasswordHash
-        +string PreferredCurrency
-    }
-
-    class CurrencyConverter {
-        <<static>>
-        +Convert(amount, fromCurrency, toCurrency) decimal
-    }
-
-    class IReportGenerator {
-        <<interface>>
-        +GetFileExtension() string
-        +GenerateReport(transactions, balance, filePath)
-    }
-    class ExcelExporter {
-        +GenerateReport()
-    }
-    class PdfExporter {
-        +GenerateReport()
-    }
-    IReportGenerator <|-- ExcelExporter
-    IReportGenerator <|-- PdfExporter
-
-    class Form1 {
-        <<UI>>
-        +AuthenticateUser()
-    }
-    class Form2 {
-        <<UI>>
-        +DisplayDashboard()
-    }
-    
-    Form1 --> UserManager : Uses
-    Form1 --> Form2 : Launches
-    Form2 --> LedgerManager : Uses
-    Form2 --> UserManager : Uses
-    Form2 --> CurrencyConverter : Uses
-    Form2 --> IReportGenerator : Uses
-```
 
 ---
 
@@ -99,8 +19,8 @@ classDiagram
 - **Multi-Profile Authentication:** Secure Login and Sign Up system utilizing SHA256 password hashing. Every user has a strictly separate profile and data file.
 - **Modern Dark Mode UI:** A custom borderless window design featuring draggable headers, styled flat controls, and an anti-aliased dynamic bar chart.
 - **Persistent Data Storage:** Income and Expense transactions are automatically saved locally into user-specific CSV files, preventing data loss between sessions.
-- **Smart Currency Conversion:** Includes a dynamic offline currency converter. Users can input transactions in various currencies, which convert to the user's preferred currency. Additionally, changing the main currency automatically converts all existing transaction history and the total balance using historical rates.
-- **Clean Repository Architecture:** Organized file structure with dedicated `Logic` and `UI` layers, improving maintainability and separation of concerns.
+- **Smart Currency Conversion:** Includes a dynamic offline currency converter. Users can input transactions in various currencies (USD, EUR, GBP, JPY, PHP, INR) which immediately convert to the user's saved, preferred display currency.
+- **Data Exporting:** The ability to export the entire transaction ledger and current balance into an Excel-compatible (.csv) file for external processing or backup.
 
 ---
 
@@ -108,9 +28,8 @@ classDiagram
 1. **Authentication:** Upon launch, the `UserManager` loads all known user credentials from a local file (`users.txt`). The user is presented with `Form1` where they can either Register or Login.
 2. **Initialization:** Once authenticated, `Form1` initializes a `LedgerManager` context specific to the user and launches the Dashboard (`Form2`).
 3. **Data Loading:** The `LedgerManager` utilizes the `DataStore` to read the user's dedicated financial CSV file, parsing all historical transactions into memory and calculating the `CurrentBalance`.
-4. **Transaction Processing:** When a user clicks "+ Income" or "- Expense", they are prompted for an amount, a category/source, and the currency of the transaction. The `CurrencyConverter` scales the amount to the user's current currency. The `LedgerManager` then registers the `IncomeRecord` or `BusinessExpense` and saves the updated state.
-5. **Currency Switching:** When the user changes their preferred currency via the Dashboard, `LedgerManager.ChangeCurrency` is called. This method encapsulates the conversion of every historical transaction in the ledger, ensuring the `CurrentBalance` remains accurate and consistent in the new currency.
-6. **UI Rendering:** The Dashboard updates the balance, populates the datagrid with converted values, and recalculates the bar chart graphics.
+4. **Transaction Processing:** When a user clicks "+ Income" or "- Expense", they are prompted for an amount, a category/source, and the currency of the transaction. The `CurrencyConverter` scales the amount to the user's stored `PreferredCurrency`. The `LedgerManager` then registers the `IncomeRecord` or `BusinessExpense` and immediately calls `DataStore` to save the updated state to the hard drive.
+5. **UI Rendering:** The Dashboard seamlessly updates the balance text, populates the datagrid with new rows, and recalculates the relative heights for the Income vs. Expense Bar Chart graphics.
 
 ---
 
