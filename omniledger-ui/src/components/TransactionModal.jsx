@@ -27,7 +27,7 @@ const TransactionModal = ({ username, type, currentCurrency = '$', onClose, onCo
     try {
       const res = await fetch('http://localhost:8080/api/ledger/transaction', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json; charset=utf-8' },
         body: JSON.stringify({
           username,
           amount: parseFloat(amount),
