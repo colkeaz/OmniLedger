@@ -296,7 +296,7 @@ namespace OmniLedger.Logic
         private void SendJsonResponse(HttpListenerResponse response, int statusCode, object data)
         {
             response.StatusCode = statusCode;
-            response.ContentType = "application/json";
+            response.ContentType = "application/json; charset=utf-8";
             string json = _serializer.Serialize(data);
             byte[] bytes = Encoding.UTF8.GetBytes(json);
             response.ContentLength64 = bytes.Length;
