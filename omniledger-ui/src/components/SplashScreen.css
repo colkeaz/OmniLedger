@@ -1,0 +1,94 @@
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-base);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.splash-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xl);
+}
+
+/* The pulse animation for the logo icon */
+@keyframes pulseGlow {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+    filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.4));
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+    filter: drop-shadow(0 0 25px rgba(0, 242, 254, 0.8));
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+    filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.4));
+  }
+}
+
+.logo-icon {
+  width: 80px;
+  height: 80px;
+  position: relative;
+  animation: pulseGlow 2s ease-in-out infinite;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Four-leaf shape approximation */
+.leaf {
+  width: 36px;
+  height: 36px;
+  background: var(--color-primary);
+  border-radius: 50% 50% 0 50%;
+}
+
+.leaf-1 {
+  transform: rotate(0deg);
+}
+.leaf-2 {
+  transform: rotate(90deg);
+}
+.leaf-3 {
+  transform: rotate(270deg);
+}
+.leaf-4 {
+  transform: rotate(180deg);
+}
+
+.logo-text {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-main);
+  /* Optional: we can apply a subtle gradient to the text to make it more premium */
+  background: var(--text-main);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: fadeIn 1.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

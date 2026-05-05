@@ -17,13 +17,17 @@ namespace OmniLedger.Logic
         
         private string _username;
         private DataStore _dataStore;
+        private string _currentCurrencySymbol = "$";
+        private readonly object _syncRoot = new object();
 
         public decimal CurrentBalance => _currentBalance;
+        public string CurrentCurrencySymbol => _currentCurrencySymbol;
         public IReadOnlyList<Transaction> TransactionHistory => _transactionHistory.AsReadOnly();
 
-        public LedgerManager(string username)
+        public LedgerManager(string username, string initialCurrency = "$")
         {
             _username = username;
+            _currentCurrencySymbol = initialCurrency;
             _dataStore = new DataStore();
             _transactionHistory = _dataStore.LoadTransactions(_username);
             
@@ -31,6 +35,31 @@ namespace OmniLedger.Logic
             {
                 _transactionCounter = _transactionHistory.Max(t => t.TransactionID);
                 _currentBalance = _transactionHistory.Sum(t => t is IncomeRecord ? t.Amount : -t.Amount);
+            }
+        }
+
+        /// <summary>
+        /// Change the ledger currency and convert all existing transactions
+        /// Encapsulation ensures that balance updates are synchronized with currency changes
+        /// </summary>
+        public void ChangeCurrency(string newCurrency)
+        {
+            if (string.IsNullOrEmpty(newCurrency) || newCurrency == _currentCurrencySymbol)
+                return;
+
+            lock (_syncRoot)
+            {
+                string oldCurrency = _currentCurrencySymbol;
+                _currentCurrencySymbol = newCurrency;
+
+                foreach (var transaction in _transactionHistory)
+                {
+                    transaction.Amount = CurrencyConverter.Convert(transaction.Amount, oldCurrency, newCurrency);
+                }
+
+                // Recalculate balance to ensure precision
+                _currentBalance = _transactionHistory.Sum(t => t is IncomeRecord ? t.Amount : -t.Amount);
+                _dataStore.SaveTransactions(_username, _transactionHistory);
             }
         }
 
@@ -51,29 +80,32 @@ namespace OmniLedger.Logic
             if (transaction.Amount <= 0)
                 throw new ArgumentException("Transaction amount must be positive");
 
-            // Assign unique transaction ID
-            transaction.TransactionID = ++_transactionCounter;
-            transaction.Date = DateTime.Now;
-
-            // Process income
-            if (transaction is IncomeRecord)
+            lock (_syncRoot)
             {
-                _currentBalance += transaction.Amount;
-                _transactionHistory.Add(transaction);
-                _dataStore.SaveTransactions(_username, _transactionHistory);
-                return true;
-            }
+                // Assign unique transaction ID
+                transaction.TransactionID = ++_transactionCounter;
+                transaction.Date = DateTime.Now;
 
-            // Process expense with fund validation
-            if (transaction is BusinessExpense)
-            {
-                if (!ValidateFunds(transaction.Amount))
-                    return false; // Prevent overdraft
+                // Process income
+                if (transaction is IncomeRecord)
+                {
+                    _currentBalance += transaction.Amount;
+                    _transactionHistory.Add(transaction);
+                    _dataStore.SaveTransactions(_username, _transactionHistory);
+                    return true;
+                }
 
-                _currentBalance -= transaction.Amount;
-                _transactionHistory.Add(transaction);
-                _dataStore.SaveTransactions(_username, _transactionHistory);
-                return true;
+                // Process expense with fund validation
+                if (transaction is BusinessExpense)
+                {
+                    if (!ValidateFunds(transaction.Amount))
+                        return false; // Prevent overdraft
+
+                    _currentBalance -= transaction.Amount;
+                    _transactionHistory.Add(transaction);
+                    _dataStore.SaveTransactions(_username, _transactionHistory);
+                    return true;
+                }
             }
 
             return false;
@@ -110,19 +142,22 @@ namespace OmniLedger.Logic
         /// </summary>
         public bool UndoLastTransaction()
         {
-            if (_transactionHistory.Count == 0)
-                return false;
+            lock (_syncRoot)
+            {
+                if (_transactionHistory.Count == 0)
+                    return false;
 
-            Transaction lastTransaction = _transactionHistory[_transactionHistory.Count - 1];
-            
-            if (lastTransaction is IncomeRecord)
-                _currentBalance -= lastTransaction.Amount;
-            else if (lastTransaction is BusinessExpense)
-                _currentBalance += lastTransaction.Amount;
+                Transaction lastTransaction = _transactionHistory[_transactionHistory.Count - 1];
+                
+                if (lastTransaction is IncomeRecord)
+                    _currentBalance -= lastTransaction.Amount;
+                else if (lastTransaction is BusinessExpense)
+                    _currentBalance += lastTransaction.Amount;
 
-            _transactionHistory.RemoveAt(_transactionHistory.Count - 1);
-            _dataStore.SaveTransactions(_username, _transactionHistory);
-            return true;
+                _transactionHistory.RemoveAt(_transactionHistory.Count - 1);
+                _dataStore.SaveTransactions(_username, _transactionHistory);
+                return true;
+            }
         }
     }
 }

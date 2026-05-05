@@ -9,6 +9,7 @@ namespace OmniLedger.Logic
     {
         private string _userFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "users.txt");
         private List<User> _users;
+        private readonly object _syncRoot = new object();
 
         public UserManager()
         {
@@ -41,24 +42,33 @@ namespace OmniLedger.Logic
         public bool RegisterUser(string username, string password)
         {
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password)) return false;
-            if (_users.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase))) return false;
 
-            _users.Add(new User(username, HashPassword(password)));
-            SaveUsers();
-            return true;
+            lock (_syncRoot)
+            {
+                if (_users.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase))) return false;
+
+                _users.Add(new User(username, HashPassword(password)));
+                SaveUsers();
+                return true;
+            }
         }
 
         public bool ValidateUser(string username, string password)
         {
-            var user = GetUser(username);
-            if (user == null) return false;
-
-            return user.PasswordHash == HashPassword(password);
+            string hashedPassword = HashPassword(password);
+            lock (_syncRoot)
+            {
+                return _users.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase) 
+                                    && u.PasswordHash == hashedPassword);
+            }
         }
 
         public User GetUser(string username)
         {
-            return _users.FirstOrDefault(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+            lock (_syncRoot)
+            {
+                return _users.FirstOrDefault(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+            }
         }
 
         public void UpdateUserCurrency(string username, string newCurrency)
