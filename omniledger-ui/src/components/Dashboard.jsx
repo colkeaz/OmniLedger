@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 import TransactionModal from './TransactionModal';
 import CurrencyModal from './CurrencyModal';
+import { apiFetch, getApiUrl } from '../utils/api';
 
 const Dashboard = ({ username, onLogout }) => {
   const [data, setData] = useState({
@@ -14,6 +15,7 @@ const Dashboard = ({ username, onLogout }) => {
   
   const [modalType, setModalType] = useState(null); // 'Income' or 'Expense'
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [sortOrder, setSortOrder] = useState('latest'); // 'latest' or 'oldest'
   const [trackerView, setTrackerView] = useState('day'); // 'year', 'month', 'day'
   const [hoveredBar, setHoveredBar] = useState(null);
@@ -22,7 +24,7 @@ const Dashboard = ({ username, onLogout }) => {
   const [trackerOffset, setTrackerOffset] = useState(0);
 
   const fetchData = () => {
-    fetch(`http://localhost:8080/api/ledger/dashboard?username=${username}`)
+    apiFetch(`/api/ledger/dashboard?username=${username}`)
       .then(res => res.json())
       .then(json => {
         if (!json.error) {
@@ -165,7 +167,24 @@ const Dashboard = ({ username, onLogout }) => {
           <div className="sidebar-logo">OmniLedger</div>
           <div className="sidebar-nav">
             <button className="btn-outline" onClick={() => setShowCurrencyModal(true)}>CHANGE CURRENCY</button>
-            <button className="btn-outline" onClick={() => window.open(`http://localhost:8080/api/ledger/export?username=${username}`)}>EXPORT REPORT</button>
+            <div className="export-dropdown-container">
+              <button className="btn-outline" onClick={() => setShowExportMenu(!showExportMenu)}>
+                EXPORT REPORT ▾
+              </button>
+              {showExportMenu && (
+                <>
+                  <div className="export-overlay" onClick={() => setShowExportMenu(false)} />
+                  <div className="export-dropdown-menu">
+                    <button className="export-option" onClick={() => { window.open(getApiUrl(`/api/ledger/export?username=${username}`)); setShowExportMenu(false); }}>
+                      <span className="export-icon">📄</span> Export as CSV
+                    </button>
+                    <button className="export-option" onClick={() => { window.open(getApiUrl(`/api/ledger/export-pdf?username=${username}`)); setShowExportMenu(false); }}>
+                      <span className="export-icon">📕</span> Export as PDF
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
         <div className="sidebar-bottom">
