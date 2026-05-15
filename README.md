@@ -32,7 +32,8 @@ OmniLedger follows a decoupled **client-server** architecture:
 ## UML Diagram
 
 
-<img width="8192" height="3793" alt="omniledger_diagram" src="https://github.com/user-attachments/assets/f1ddf713-badc-4de9-833b-0cd6ba0a2cde" />
+<img width="8192" height="4787" alt="omniledger_diagram" src="https://github.com/user-attachments/assets/8cd398b4-f296-454a-b212-76aa280f7ccc" />
+
 
 
 
@@ -133,8 +134,8 @@ OmniLedger/
 │   │   ├── Expense.cs           # BusinessExpense subclass (Category field)
 │   │   ├── User.cs              # User profile model (Username, PasswordHash, PreferredCurrency)
 │   │   ├── IReportGenerator.cs  # Report generation interface (Abstraction)
-│   │   ├── ExcelExporter.cs     # CSV export implementation (Polymorphism)
-│   │   └── PdfExporter.cs       # PDF export implementation (Polymorphism)
+│   │   └──  ExcelExporter.cs     # CSV export implementation (Polymorphism)
+│   │   
 │   ├── Program.cs               # Entry point (instantiates & starts HttpServer)
 │   └── OmniLedger.csproj        # Project configuration (.NET Framework 4.7.2)
 │
@@ -173,7 +174,7 @@ OmniLedger/
 |-----------|----------------|-----------|
 | **Encapsulation** | Private `_currentBalance` & `_transactionHistory` in `LedgerManager`; only exposed via read-only properties and validated methods | `Transaction.cs`, `LedgerManager.cs` |
 | **Inheritance** | `IncomeRecord` and `BusinessExpense` extend abstract `Transaction` | `Income.cs`, `Expense.cs`, `Transaction.cs` |
-| **Polymorphism** | `FormatRecord()` and `GetTransactionType()` overridden per subclass; `IReportGenerator` fulfilled by two exporters | `IReportGenerator.cs`, `ExcelExporter.cs`, `PdfExporter.cs` |
+| **Polymorphism** | `FormatRecord()` and `GetTransactionType()` overridden per subclass; `IReportGenerator` fulfilled by two exporters | `IReportGenerator.cs`, `ExcelExporter.cs`|
 | **Abstraction** | `IReportGenerator` interface decouples export format from business logic | `IReportGenerator.cs` |
 | **Thread Safety** | `lock (_syncRoot)` in `LedgerManager` and `UserManager` guard all write operations | `LedgerManager.cs`, `UserManager.cs` |
 
@@ -183,5 +184,5 @@ OmniLedger/
 ## Development Team
 
 - **Luke Andre V. Paala** - Project Head/Leader
-- **Amber Dadap** - UI/UX Designer
+- **Amber Loveine Dadap** - UI/UX Designer
 - **Hans Gadiel P. Caraig** - Logic Tester
