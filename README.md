@@ -316,5 +316,5 @@ OmniLedger/
 ## Development Team
 
 - **Luke Andre V. Paala** - Project Head/Leader
-- **Amber Dadap** - UI/UX Designer
+- **Amber Loveine Dadap** - UI/UX Designer
 - **Hans Gadiel P. Caraig** - Logic Tester
