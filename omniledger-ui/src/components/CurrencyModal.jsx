@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './CurrencyModal.css';
+import { apiFetch } from '../utils/api';
 
 const currencies = [
   { symbol: '$', name: 'US Dollar (USD)' },
@@ -23,9 +24,8 @@ const CurrencyModal = ({ username, currentCurrency, onClose, onComplete }) => {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('http://localhost:8080/api/ledger/currency', {
+      const res = await apiFetch('/api/ledger/currency', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
         body: JSON.stringify({
           username,
           currency: selectedCurrency

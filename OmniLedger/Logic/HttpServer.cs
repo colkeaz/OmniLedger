@@ -99,6 +99,10 @@ namespace OmniLedger.Logic
                 {
                     HandleExport(request, response);
                 }
+                else if (request.HttpMethod == "GET" && path == "/api/ledger/export-pdf")
+                {
+                    HandleExportPdf(request, response);
+                }
                 else
                 {
                     SendJsonResponse(response, 404, new { error = "Not Found" });
@@ -281,6 +285,48 @@ namespace OmniLedger.Logic
                 output.Write(fileBytes, 0, fileBytes.Length);
             }
             res.Close();
+        }
+
+        private void HandleExportPdf(HttpListenerRequest req, HttpListenerResponse res)
+        {
+            string username = req.QueryString["username"];
+            if (string.IsNullOrEmpty(username))
+            {
+                SendJsonResponse(res, 400, new { error = "Username required" });
+                return;
+            }
+
+            var user = _userManager.GetUser(username);
+            string defaultCurrency = user != null ? user.PreferredCurrency : "$";
+
+            var ledger = new LedgerManager(username, defaultCurrency);
+            var transactions = ledger.GetAllTransactions();
+
+            // Generate PDF report to a temp file
+            string tempPath = Path.Combine(Path.GetTempPath(), $"{username}_report.pdf");
+            try
+            {
+                IReportGenerator pdfExporter = new PdfExporter();
+                pdfExporter.GenerateReport(transactions, ledger.CurrentBalance, tempPath);
+
+                res.StatusCode = 200;
+                res.ContentType = "application/pdf";
+                res.AddHeader("Content-Disposition", $"attachment; filename=\"{username}_report.pdf\"");
+
+                byte[] fileBytes = File.ReadAllBytes(tempPath);
+                res.ContentLength64 = fileBytes.Length;
+                using (var output = res.OutputStream)
+                {
+                    output.Write(fileBytes, 0, fileBytes.Length);
+                }
+                res.Close();
+            }
+            finally
+            {
+                // Clean up temp file
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
         }
 
         private T ReadJsonBody<T>(HttpListenerRequest request)

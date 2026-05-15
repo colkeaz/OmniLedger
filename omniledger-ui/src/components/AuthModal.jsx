@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './AuthModal.css';
+import { apiFetch } from '../utils/api';
 
 const AuthModal = ({ onComplete }) => {
   const [view, setView] = useState('login'); // 'login', 'register', 'success'
@@ -16,9 +17,8 @@ const AuthModal = ({ onComplete }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:8080/api/auth/login', {
+      const res = await apiFetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
         body: JSON.stringify({ username: e.target[0].value, password: e.target[1].value })
       });
       const data = await res.json();
@@ -35,9 +35,8 @@ const AuthModal = ({ onComplete }) => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:8080/api/auth/register', {
+      const res = await apiFetch('/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
         body: JSON.stringify({ username: e.target[0].value, password: e.target[2].value })
       });
       const data = await res.json();
