@@ -33,7 +33,7 @@ OmniLedger follows a decoupled **client-server** architecture:
 
 ## UML Diagram
 
-> The following Mermaid diagram reflects the **current** class structure of the C# backend.
+
 
 ```mermaid
 classDiagram
