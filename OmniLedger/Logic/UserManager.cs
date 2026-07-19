@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using BCrypt.Net;
 
 namespace OmniLedger.Logic
 {
@@ -44,11 +45,15 @@ namespace OmniLedger.Logic
         {
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password)) return false;
 
+            // Hash the password outside the lock. BCrypt is intentionally slow, 
+            // so we avoid blocking other threads during the calculation.
+            string hashedPassword = HashPassword(password);
+
             lock (_syncRoot)
             {
                 if (_users.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase))) return false;
 
-                _users.Add(new User(username, HashPassword(password)));
+                _users.Add(new User(username, hashedPassword));
                 SaveUsers();
                 return true;
             }
@@ -56,12 +61,19 @@ namespace OmniLedger.Logic
 
         public bool ValidateUser(string username, string password)
         {
-            string hashedPassword = HashPassword(password);
+            User user;
+            
+            // Retrieve the user inside the lock
             lock (_syncRoot)
             {
-                return _users.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase) 
-                                    && u.PasswordHash == hashedPassword);
+                user = _users.FirstOrDefault(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
             }
+
+            if (user == null) return false;
+
+            // Verify outside the lock. This extracts the salt from the stored hash 
+            // and securely compares it against the plaintext input.
+            return BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
         }
 
         public User GetUser(string username)
@@ -74,21 +86,22 @@ namespace OmniLedger.Logic
 
         public void UpdateUserCurrency(string username, string newCurrency)
         {
-            var user = GetUser(username);
-            if (user != null)
+            // Note: Added a lock here to prevent race conditions during the save operation
+            lock (_syncRoot)
             {
-                user.PreferredCurrency = newCurrency;
-                SaveUsers();
+                var user = _users.FirstOrDefault(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+                if (user != null)
+                {
+                    user.PreferredCurrency = newCurrency;
+                    SaveUsers();
+                }
             }
         }
 
         private string HashPassword(string password)
         {
-            using (var sha256 = System.Security.Cryptography.SHA256.Create())
-            {
-                byte[] bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(bytes);
-            }
+            // Generates a salted hash with a default work factor (cost) of 11.
+            return BCrypt.Net.BCrypt.HashPassword(password);
         }
     }
 }
